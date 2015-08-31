@@ -1522,7 +1522,7 @@ the specific language governing permissions and limitations under the Apache Lic
                 return;
             }
 
-            children = this.findHighlightableChoices().find('.select2-result-label');
+            children = this.findHighlightableChoices().children('.select2-result-label');
 
             child = $(children[index]);
 
@@ -1550,9 +1550,27 @@ the specific language governing permissions and limitations under the Apache Lic
             }
         },
 
+        // private
+        // abstract
+        _findHighlightableChoicesRecursive: function(elm) {
+            var children = elm.children(".select2-result-selectable:not(.select2-disabled):not(.select2-selected)");
+            var choices = $();
+            for (var i = 0, len = children.length; i < len; i++) {
+                var child = $(children.get(i));
+                choices = choices.add(child);
+
+                var subChoicesList = child.hasClass('select2-result-with-children') ? child.children('.select2-result-sub') : null;
+                if (subChoicesList && subChoicesList.length > 0) {
+                    var subChoices = this._findHighlightableChoicesRecursive(subChoicesList);
+                    choices = choices.add(subChoices);
+                }
+            }
+            return choices;
+        },
+
         // abstract
         findHighlightableChoices: function() {
-            return this.results.find(".select2-result-selectable:not(.select2-disabled):not(.select2-selected)");
+            return this._findHighlightableChoicesRecursive(this.results);
         },
 
         // abstract
@@ -1823,7 +1841,7 @@ the specific language governing permissions and limitations under the Apache Lic
                     window.setTimeout(function() { self.loadMoreIfNeeded(); }, 10);
                 }
 
-                this.postprocessResults(data, initial);
+                this.postprocessResults(data, initial, false);
 
                 postRender();
 
